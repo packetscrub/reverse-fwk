@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Create KVM VM using an Ubuntu server ISO
+PROJ_DIR="$(pwd)"
+ISO_PATH="$PROJ_DIR/iso"
+VM_NAME="reversing-framework"
+OS_VAR="ubuntu18.04"
+
+# Check if iso exists already, otherwise download it
+# This should be replaced with a python script in future for given user file
+ISO_FILE="$(find $ISO_PATH -type f -name '*.iso')"
+if [ -z $ISO_FILE ]; then
+    echo "No ISO found, downloading ubuntu-18.04.2 server image"
+    wget -P $ISO_PATH "http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.2-server-amd64.iso"
+    ISO_FILE="ubuntu-18.04.2-server-amd64.iso"
+    echo "using ISO $(basename $ISO_FILE)"
+else
+    echo "Found ISO $(basename $ISO_FILE)"
+fi
+
+
+
+# Install machine
+echo "Creating VM $VM_NAME from $ISO_FILE"
+virt-install \
+    --connect=qemu:///system \
+    --name=$VM_NAME \
+    --vcpus=1 \
+    --memory=1024 \
+    --boot=cdrom,hd \
+    --disk=$PROJ_DIR/$VM_NAME.qcow2,size=30,bus=virtio \
+    --autostart \
+    --virt-type=kvm\
+    --os-type=linux \
+    --os-variant=$OS_VAR \
+    --graphics=none \
+    --noautoconsole \
+    --location=$ISO_FILE \
+    --initrd-inject="$PROJ_DIR/ubuntu.ks" \
+    --extra-args="ks=file:/ubuntu.ks console=tty0 console=ttyS0,115200 serial" \
+
+

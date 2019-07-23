@@ -1,2 +1,4 @@
 *.iso
 !iso/.gitkeep
+secrets.txt
+
